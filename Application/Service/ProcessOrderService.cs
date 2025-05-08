@@ -74,7 +74,7 @@ namespace Application.Service
                         //Enviar el mensaje de disponibilidad
                         var eventMessagge = new CheckAvailabilityRequestEvent(key, headerOrder.IdOrder, recipes);
                         await _producerBus.SendAsync(_kafkaSettings.Value.CheckAvailabilityRequestTopic, eventMessagge);
-                        _logger.LogInformation("Mensaje enviado");
+                        _logger.LogInformation("Mensaje enviado: consultar disponibilidad.");
                         
                         _logger.LogInformation("Consumir mensaje en proceso..");
 
@@ -84,7 +84,7 @@ namespace Application.Service
                             var eventConsumer = scope.ServiceProvider.GetRequiredService<IEventConsumer>();
                             var result = await eventConsumer.Consume(_kafkaSettings.Value.CheckAvailabilityResponseTopic, key.ToString());
 
-                            _logger.LogInformation($"Mensaje consumido: {result}");
+                            _logger.LogInformation($"Mensaje disponibilidad validada, consumido: {result}");
 
                             if (result?.IsAvailable == true)
                             {
@@ -94,7 +94,7 @@ namespace Application.Service
 
                                 await _producerBus.SendAsync(_kafkaSettings.Value.CreatedOrderTopic,
                                                               new CreatedOrderEvent(Guid.NewGuid(), $"Pedido nro: {headerOrder.IdOrder} creado", headerOrder.IdOrder));
-                                _logger.LogInformation("Mensaje enviado");
+                                _logger.LogInformation("Mensaje pedido creado, enviado.");
 
                                 transactionScope.Complete();
                                 return true;
